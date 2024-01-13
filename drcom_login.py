@@ -104,24 +104,43 @@ def drcom_login(config, drcom_login_function):
         drcom_login_function(username, password)
 
 
-def main():
-    config = get_config()
-    type = input("请选择网络类型：\n1. 宿舍网络\n2. 教学区网络\n3. 教学区网络自动续连\n:")
-    if type == "1":
-        drcom_login(config, drcom_login_dormitory)
-    elif type == "2":
-        drcom_login(config, drcom_login_office)
-    elif type == "3":
-        sleep_time = input("请输入自动检测间隔时间（单位：分钟）：")
-        print("程序将每隔" + sleep_time + "分钟自动检测网络连接状态并登录！")
+def drcom_login_auto(config, drcom_login_function):
+    print("注意:请不要设置过短的间隔时间，至少大于5分钟!!!")
+    sleep_time = input("请输入自动检测间隔时间(单位：分钟):")
+    print("程序将每隔" + sleep_time + "分钟自动检测网络连接状态并登录!")
+    print("按下Ctrl+C可退出程序!")
+    try:
         while True:
-            drcom_login(config, drcom_login_office)
+            drcom_login(config, drcom_login_function)
             time.sleep(60 * int(sleep_time))
-    else:
-        print("输入错误！")
+    except KeyboardInterrupt:
+        print("按下了Ctrl+C!")
         print("程序执行完成！请按下回车键退出...")
         input()
         exit(0)
+
+
+def main():
+    config = get_config()
+    type = input("请选择网络类型：\n"
+                 "1. 宿舍网络(单次登录)\n"
+                 "2. 教学区网络(单次登录)\n"
+                 "3. 宿舍网络(自动续期)\n"
+                 "4. 教学区网络(自动续期)\n")
+    match type:
+        case "1":
+            drcom_login(config, drcom_login_dormitory)
+        case "2":
+            drcom_login(config, drcom_login_office)
+        case "3":
+            drcom_login_auto(config, drcom_login_dormitory)
+        case "4":
+            drcom_login_auto(config, drcom_login_office)
+        case _:
+            print("输入错误！")
+            print("程序执行完成！请按下回车键退出...")
+            input()
+            exit(0)
 
 
 if __name__ == "__main__":
