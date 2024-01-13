@@ -34,24 +34,30 @@ def get_config():
 
 
 def check_internet_connection():
-    try:
-        response = requests.get("http://www.github.com", timeout=1)
-        return response.status_code == 200
-    except requests.exceptions.RequestException:
+    r = requests.get('http://172.30.255.42').text
+    index = r.find("<title>")
+    if r[index+7:index+10] == "注销页":
+        return True
+    else:
         return False
 
 
 def get_ip_dormitory():
     r = requests.get('http://172.30.255.42').text
-    index = r.find("v46ip=")
-    ip = r[index+7:index+19]
-    return ip
+    if check_internet_connection():
+        index = r.find("v4ip=")
+        ip = r[index+6:index+18]
+        return ip
+    else:
+        index = r.find("v46ip=")
+        ip = r[index+7:index+19]
+        return ip
 
 
 def drcom_login_dormitory(username, password):
     ip = get_ip_dormitory()
     print("Local IP: " + ip)
-    url = (
+    drcom_url = (
         "http://172.30.255.42:801/eportal/portal/login?callback=dr1003"
         + "&login_method=1"
         + "&user_account=%2C0%2C" + username
@@ -66,11 +72,9 @@ def drcom_login_dormitory(username, password):
         + "&lang=en&v=3246&lang=en"
     )
 
-    r = requests.get(url)
-    print("Status Code: " + str(r.status_code))
-    print("Response Text: " + r.text)
-    print(r.text[17])
-    if r.text[17] == "1":
+    drcom_res = requests.get(drcom_url)
+    print("Response Text: " + drcom_res.text)
+    if drcom_res.text[17] == "1":
         print("登录成功！")
     else:
         print("登录失败！")
@@ -84,6 +88,7 @@ def drcom_login_office(username, password):
         "0MKKey": "%B5%C7%A1%A1%C2%BC"
         }
     drcom_res = requests.post(drcom_url, drcom_form)
+    print("Response Text: " + drcom_res.text)
     print("登录成功！"
           if drcom_res.status_code == 200 else "登录失败！")
 
