@@ -9,6 +9,7 @@ class DrcomSzu(object):
     def __init__(self):
         self.__set_working_directory()
         self.config = self.__get_config()
+        self.__internet_connectivity = False
 
     @staticmethod
     def __set_working_directory():
@@ -43,13 +44,14 @@ class DrcomSzu(object):
         r = requests.get(self.get_url("check")).text
         index = r.find("<title>")
         if r[index + 7: index + 10] == "注销页":
-            return True
+            self.__internet_connectivity = True
         else:
-            return False
+            self.__internet_connectivity = False
 
     def get_ip(self):
         r = requests.get(self.get_url("check")).text
-        if self.__check_internet_connection():
+        self.__check_internet_connection()
+        if self.__internet_connectivity:
             index = r.find("v4ip=")
             ip = r[index + 6: index + 18]
             return ip
@@ -59,7 +61,8 @@ class DrcomSzu(object):
             return ip
 
     def login(self):
-        if self.__check_internet_connection():
+        self.__check_internet_connection()
+        if self.__internet_connectivity:
             print("网络已连接！",
                   time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
         else:
