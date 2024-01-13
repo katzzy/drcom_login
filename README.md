@@ -1,6 +1,12 @@
-# drcom_login
+# DrcomSzu
 
-drcom_login is an tool for logging into szu campus networks.
+DrcomSzu is a tool for logging into the szu campus network.
+
+## Dependency
+
+- python 3.10+
+- requests
+- pyyaml
 
 ## Package
 
@@ -12,7 +18,7 @@ Pyinstaller -F -i DrcomSzu.ico DrcomSzu.py
 
 ## Linux users
 
-If you are using Linux, you can log in using the curl or wget command as follows.
+If you are using Linux, you can log in the szu campus network using the curl or wget command as follows.
 
 Replace {yourlocalip} {youraccount} and {yourpassword} with your own local_ip username and password.
 
