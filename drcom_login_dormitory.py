@@ -48,7 +48,7 @@ def drcom_login(username, password):
         + "&login_method=1"
         + "&user_account=%2C0%2C" + username
         + "&user_password=" + password
-        + "&wlan_user_ip=" + "172.29.6.121"
+        + "&wlan_user_ip=" + ip
         + "&wlan_user_ipv6="
         + "&wlan_user_mac=000000000000"
         + "&wlan_ac_ip="
