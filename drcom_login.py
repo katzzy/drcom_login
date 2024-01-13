@@ -17,17 +17,17 @@ def get_config():
     if not os.path.exists("config.yml"):
         print("配置文件不存在！")
         print("正在创建配置文件...")
+        print("请输入校园网账号：")
+        username = input()
+        print("请输入校园网密码：")
+        password = input()
         with open("config.yml", "w") as ymlfile:
             cfg = {
-                "username": "201600000000",
-                "password": "123456"
+                "username": username,
+                "password": password
             }
             yaml.dump(cfg, ymlfile)
         print("配置文件创建成功！")
-        print("请修改配置文件后重新运行程序！")
-        print("程序执行完成！请按下回车键退出...")
-        input()
-        exit(0)
     with open("config.yml", "r") as ymlfile:
         config = yaml.safe_load(ymlfile)
     return config
@@ -90,10 +90,10 @@ def drcom_login_office(username, password):
 
 def drcom_login(config, drcom_login_function):
     if check_internet_connection():
-        print("网络已连接！")
+        print("网络已连接！", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
     else:
-        print("网络未连接！")
-        print("尝试登录...")
+        print("网络未连接！", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+        print("尝试登录...", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
         username = config['username']
         password = config['password']
         drcom_login_function(username, password)
@@ -107,10 +107,11 @@ def main():
     elif type == "2":
         drcom_login(config, drcom_login_office)
     elif type == "3":
-        print("程序将每隔1小时自动检测网络连接并登录！")
+        sleep_time = input("请输入自动检测间隔时间（单位：分钟）：")
+        print("程序将每隔" + sleep_time + "分钟自动检测网络连接状态并登录！")
         while True:
-            drcom_login(drcom_login_office)
-            time.sleep(60 * 60)  # 1 hour
+            drcom_login(config, drcom_login_office)
+            time.sleep(60 * int(sleep_time))
     else:
         print("输入错误！")
         print("程序执行完成！请按下回车键退出...")
