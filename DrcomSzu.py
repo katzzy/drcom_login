@@ -63,7 +63,7 @@ class DrcomSzu(object):
                   time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
             print("尝试登录...",
                   time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
-            self.__login_function()
+            self.login_function()
 
     def login_auto(self):
         print("注意:请不要设置过短的间隔时间，至少大于5分钟!!!")
@@ -102,12 +102,9 @@ class DrcomSzuDormitory(DrcomSzu):
             return (
                 "http://172.30.255.42:801/eportal/portal/login?callback=dr1003"
                 + "&login_method=1"
-                + "&user_account=%2C0%2C"
-                + username
-                + "&user_password="
-                + password
-                + "&wlan_user_ip="
-                + ip
+                + "&user_account=%2C0%2C" + username
+                + "&user_password=" + password
+                + "&wlan_user_ip=" + ip
                 + "&wlan_user_ipv6="
                 + "&wlan_user_mac=000000000000"
                 + "&wlan_ac_ip="
@@ -117,7 +114,7 @@ class DrcomSzuDormitory(DrcomSzu):
                 + "&lang=en&v=3246&lang=en"
             )
 
-    def __login_function(self):
+    def login_function(self):
         drcom_res = requests.get(self.get_url("login"))
         print("Response Text: " + drcom_res.text)
         if drcom_res.text[17] == "1":
@@ -132,11 +129,11 @@ class DrcomSzuOffice(DrcomSzu):
 
     def get_url(self, type):
         if type == "check":
-            return "https://drcom.szu.edu.cn"
+            return "https://drcom.szu.edu.cn/a70.htm"
         elif type == "login":
             return "https://drcom.szu.edu.cn/a70.htm"
 
-    def __login_function(self):
+    def login_function(self):
         drcom_form = {
             "DDDDD": self.config["username"],
             "upass": self.config["password"],
