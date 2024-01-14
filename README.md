@@ -2,6 +2,11 @@
 
 DrcomSzu is a tool designed for logging into the SZU campus network.
 
+## Design Principles
+
+- Minimal Dependencies: The tool is designed to have as few dependencies as possible.
+- Simplicity: The implementation of the tool is kept as simple as possible.
+
 ## Dependencies
 
 - Python 3.10+
@@ -23,7 +28,6 @@ There are two methods to use this script:
 ### Method 1
 
 - Download the `DrcomSzu.py` to your local machine.
-
 - Install the required dependencies using one of the following commands:
 
     ```bash
@@ -45,9 +49,7 @@ There are two methods to use this script:
 ### Method 2
 
 - Navigate to the [releases page](https://github.com/katzzy/drcom_login/releases) of this repository.
-
 - Download the latest binary file.
-
 - Execute the downloaded binary file.
 
 ## For Linux Users
