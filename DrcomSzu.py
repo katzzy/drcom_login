@@ -55,14 +55,14 @@ class DrcomSzu(object):
         print("公网IP地址所在地：" + re.findall(r"\"address\":\"(.*?)\"", r)[0])
 
     def __check_internet_connection(self):
-        r = requests.get(self.check_url).text
+        r = requests.get(self.check_url, headers=self.headers).text
         self.__internet_connectivity = (
             True if re.findall(r"<title>(.*?)</title>", r)[0] == "注销页"
             else False
         )
 
     def get_ip(self):
-        r = requests.get(self.check_url).text
+        r = requests.get(self.check_url, headers=self.headers).text
         self.__check_internet_connection()
         if self.__internet_connectivity:
             ip = re.findall(r"v4ip='(.*?)'", r)[0]
