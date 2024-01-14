@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import yaml
+import re
 import requests
 
 
@@ -46,6 +47,12 @@ class DrcomSzu(object):
             cfg = {"username": username, "password": password}
             yaml.dump(cfg, ymlfile)
         print("配置文件更新成功！")
+
+    def get_public_ip(self):
+        r = requests.get("https://ip.cn/api/index?ip=&type=0",
+                         headers=self.headers).text
+        print("公网IP地址：" + re.findall(r"\"ip\":\"(.*?)\"", r)[0])
+        print("公网IP地址所在地：" + re.findall(r"\"address\":\"(.*?)\"", r)[0])
 
     def __check_internet_connection(self):
         r = requests.get(self.check_url).text
@@ -121,7 +128,7 @@ class DrcomSzuDormitory(DrcomSzu):
             self.login_url,
             params=payload,
             headers=self.headers
-            )
+        )
         print("响应内容:%s" % drcom_res.text)
         print("请求头:%s" % drcom_res.request.headers)
         print("登录成功！" if drcom_res.status_code == 200 else "登录失败！")
@@ -143,7 +150,7 @@ class DrcomSzuOffice(DrcomSzu):
             self.login_url,
             data=drcom_form,
             headers=self.headers
-            )
+        )
         print("响应内容:%s" % drcom_res.text)
         print("请求头:%s" % drcom_res.request.headers)
         print("登录成功！" if drcom_res.status_code == 200 else "登录失败！")
@@ -160,6 +167,8 @@ def drcom_user_interface():
     while True:
         print("----------------------------------------")
         print("<<< DrcomSzu >>>")
+        print("当前时间：" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+        print("----------------------------------------")
         type = input(
             "功能列表：\n"
             "0. 设置账号密码\n"
@@ -167,9 +176,12 @@ def drcom_user_interface():
             "2. 教学区网络(单次登录)\n"
             "3. 宿舍网络(自动续期)\n"
             "4. 教学区网络(自动续期)\n"
+            "5. 查询校内ip(仅宿舍网络)\n"
+            "6. 查询公网ip\n"
             "100. 退出程序\n"
             "请输入功能编号："
         )
+        print("----------------------------------------")
         if type == "0":
             DrcomSzu.set_config()
         elif type == "1":
@@ -180,11 +192,18 @@ def drcom_user_interface():
             drcom_login(DrcomSzuDormitory(), True)
         elif type == "4":
             drcom_login(DrcomSzuOffice(), True)
+        elif type == "5":
+            DrcomSzuDormitory().get_ip()
+        elif type == "6":
+            DrcomSzu().get_public_ip()
         elif type == "100":
             break
         else:
             raise ValueError("Invalid type")
         print("----------------------------------------")
+        print("回车键继续...")
+        input()
+        os.system("cls")
 
 
 def main():
@@ -205,6 +224,6 @@ if __name__ == "__main__":
         print("2. 校园网服务器故障")
         print("3. 在宿舍区尝试登录教学区网络")
     finally:
-        print("程序执行完成！请按下回车键退出...")
+        print("程序已关闭！请按回车键退出...")
         input()
         exit(0)
