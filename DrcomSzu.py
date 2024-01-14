@@ -226,4 +226,4 @@ if __name__ == "__main__":
     finally:
         print("程序已关闭！请按回车键退出...")
         input()
-        exit(0)
+        sys.exit()

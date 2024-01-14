@@ -13,7 +13,7 @@ DrcomSzu is a tool for logging into the szu campus network.
 command to package the python code into an executable (exe):
 
 ```bash
-Pyinstaller -F -i DrcomSzu.ico DrcomSzu.py
+pyinstaller -F -i DrcomSzu.ico DrcomSzu.py
 ```
 
 ## Linux users
