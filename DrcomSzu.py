@@ -9,7 +9,14 @@ class DrcomSzu(object):
     def __init__(self):
         self.__set_working_directory()
         self.config = self.__get_config()
+        self.headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+                          " AppleWebKit/537.36 (KHTML, like Gecko)"
+                          " Chrome/120.0.0.0 Safari/537.36"
+        }
         self.__internet_connectivity = False
+        self.check_url = None
+        self.login_url = None
 
     @staticmethod
     def __set_working_directory():
@@ -41,7 +48,7 @@ class DrcomSzu(object):
         print("配置文件更新成功！")
 
     def __check_internet_connection(self):
-        r = requests.get(self.get_url("check")).text
+        r = requests.get(self.check_url).text
         index = r.find("<title>")
         if r[index + 7: index + 10] == "注销页":
             self.__internet_connectivity = True
@@ -49,15 +56,17 @@ class DrcomSzu(object):
             self.__internet_connectivity = False
 
     def get_ip(self):
-        r = requests.get(self.get_url("check")).text
+        r = requests.get(self.check_url).text
         self.__check_internet_connection()
         if self.__internet_connectivity:
             index = r.find("v4ip=")
             ip = r[index + 6: index + 18]
+            print("校内IP地址：" + ip)
             return ip
         else:
             index = r.find("v46ip=")
             ip = r[index + 7: index + 19]
+            print("校内IP地址：" + ip)
             return ip
 
     def login(self):
@@ -81,9 +90,6 @@ class DrcomSzu(object):
             self.login()
             time.sleep(60 * int(sleep_time))
 
-    def get_url(self, type):
-        raise NotImplementedError
-
     def login_function(self):
         raise NotImplementedError
 
@@ -91,48 +97,41 @@ class DrcomSzu(object):
 class DrcomSzuDormitory(DrcomSzu):
     def __init__(self):
         super().__init__()
-
-    def get_url(self, type):
-        if type == "check":
-            return "http://172.30.255.42"
-        elif type == "login":
-            ip = self.get_ip()
-            username = self.config["username"]
-            password = self.config["password"]
-            print("Local IP: " + ip)
-            return (
-                "http://172.30.255.42:801/eportal/portal/login?callback=dr1003"
-                + "&login_method=1"
-                + "&user_account=%2C0%2C" + username
-                + "&user_password=" + password
-                + "&wlan_user_ip=" + ip
-                + "&wlan_user_ipv6="
-                + "&wlan_user_mac=000000000000"
-                + "&wlan_ac_ip="
-                + "&wlan_ac_name="
-                + "&jsVersion=4.1.3"
-                + "&terminal_type=1"
-                + "&lang=en&v=3246&lang=en"
-            )
+        self.check_url = "http://172.30.255.42"
+        self.login_url = "http://172.30.255.42:801/eportal/portal/login"
 
     def login_function(self):
-        drcom_res = requests.get(self.get_url("login"))
-        print("Response Text: " + drcom_res.text)
-        if drcom_res.text[17] == "1":
-            print("登录成功！")
-        else:
-            print("登录失败！")
+        payload = {
+            "callback": "dr1003",
+            "login_method": "1",
+            "user_account": ",0," + self.config["username"],
+            "user_password": self.config["password"],
+            "wlan_user_ip": self.get_ip(),
+            "wlan_user_ipv6": "",
+            "wlan_user_mac": "000000000000",
+            "wlan_ac_ip": "",
+            "wlan_ac_name": "",
+            "jsVersion": "4.1.3",
+            "terminal_type": "1",
+            "lang": "en",
+            "v": "3246",
+            "lang": "en"
+        }
+        drcom_res = requests.get(
+            self.login_url,
+            params=payload,
+            headers=self.headers
+            )
+        print("响应内容:%s" % drcom_res.text)
+        print("请求头:%s" % drcom_res.request.headers)
+        print("登录成功！" if drcom_res.status_code == 200 else "登录失败！")
 
 
 class DrcomSzuOffice(DrcomSzu):
     def __init__(self):
         super().__init__()
-
-    def get_url(self, type):
-        if type == "check":
-            return "https://drcom.szu.edu.cn/a70.htm"
-        elif type == "login":
-            return "https://drcom.szu.edu.cn/a70.htm"
+        self.check_url = "https://drcom.szu.edu.cn/a70.htm"
+        self.login_url = "https://drcom.szu.edu.cn/a70.htm"
 
     def login_function(self):
         drcom_form = {
@@ -140,38 +139,56 @@ class DrcomSzuOffice(DrcomSzu):
             "upass": self.config["password"],
             "0MKKey": "%B5%C7%A1%A1%C2%BC",
         }
-        drcom_res = requests.post(self.get_url("login"), drcom_form)
-        print("Response Text: " + drcom_res.text)
+        drcom_res = requests.post(
+            self.login_url,
+            data=drcom_form,
+            headers=self.headers
+            )
+        print("响应内容:%s" % drcom_res.text)
+        print("请求头:%s" % drcom_res.request.headers)
         print("登录成功！" if drcom_res.status_code == 200 else "登录失败！")
 
 
-def main():
-    print("欢迎使用DrcomSzu！")
-    type = input(
-        "请选择网络类型：\n"
-        "0. 设置账号密码\n"
-        "1. 宿舍网络(单次登录)\n"
-        "2. 教学区网络(单次登录)\n"
-        "3. 宿舍网络(自动续期)\n"
-        "4. 教学区网络(自动续期)\n"
-    )
-    match type:
-        case "0":
+def drcom_login(drcom_szu, auto_login=False):
+    if auto_login:
+        drcom_szu.login_auto()
+    else:
+        drcom_szu.login()
+
+
+def drcom_user_interface():
+    while True:
+        print("----------------------------------------")
+        print("<<< DrcomSzu >>>")
+        type = input(
+            "功能列表：\n"
+            "0. 设置账号密码\n"
+            "1. 宿舍网络(单次登录)\n"
+            "2. 教学区网络(单次登录)\n"
+            "3. 宿舍网络(自动续期)\n"
+            "4. 教学区网络(自动续期)\n"
+            "100. 退出程序\n"
+            "请输入功能编号："
+        )
+        if type == "0":
             DrcomSzu.set_config()
-        case "1":
-            drcom_szu_dormitory = DrcomSzuDormitory()
-            drcom_szu_dormitory.login()
-        case "2":
-            drcom_szu_office = DrcomSzuOffice()
-            drcom_szu_office.login()
-        case "3":
-            drcom_szu_dormitory = DrcomSzuDormitory()
-            drcom_szu_dormitory.login_auto()
-        case "4":
-            drcom_szu_office = DrcomSzuOffice()
-            drcom_szu_office.login_auto()
-        case _:
+        elif type == "1":
+            drcom_login(DrcomSzuDormitory(), False)
+        elif type == "2":
+            drcom_login(DrcomSzuOffice(), False)
+        elif type == "3":
+            drcom_login(DrcomSzuDormitory(), True)
+        elif type == "4":
+            drcom_login(DrcomSzuOffice(), True)
+        elif type == "100":
+            break
+        else:
             raise ValueError("Invalid type")
+        print("----------------------------------------")
+
+
+def main():
+    drcom_user_interface()
 
 
 if __name__ == "__main__":
