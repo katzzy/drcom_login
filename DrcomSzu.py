@@ -25,7 +25,7 @@ class DrcomSzu(object):
             os.path.dirname(
                 os.path.realpath(sys.argv[0])))
         current_path = current_path.replace("\\", "/")
-        print("当前工作目录：" + current_path)
+        # print("当前工作目录：" + current_path)
         os.chdir(current_path)
 
     def __get_config(self):
@@ -56,23 +56,20 @@ class DrcomSzu(object):
 
     def __check_internet_connection(self):
         r = requests.get(self.check_url).text
-        index = r.find("<title>")
-        if r[index + 7: index + 10] == "注销页":
-            self.__internet_connectivity = True
-        else:
-            self.__internet_connectivity = False
+        self.__internet_connectivity = (
+            True if re.findall(r"<title>(.*?)</title>", r)[0] == "注销页"
+            else False
+        )
 
     def get_ip(self):
         r = requests.get(self.check_url).text
         self.__check_internet_connection()
         if self.__internet_connectivity:
-            index = r.find("v4ip=")
-            ip = r[index + 6: index + 18]
+            ip = re.findall(r"v4ip='(.*?)'", r)[0]
             print("校内IP地址：" + ip)
             return ip
         else:
-            index = r.find("v46ip=")
-            ip = r[index + 7: index + 19]
+            ip = re.findall(r"v46ip='(.*?)'", r)[0]
             print("校内IP地址：" + ip)
             return ip
 
@@ -129,9 +126,11 @@ class DrcomSzuDormitory(DrcomSzu):
             params=payload,
             headers=self.headers
         )
-        print("响应内容:%s" % drcom_res.text)
-        print("请求头:%s" % drcom_res.request.headers)
-        print("登录成功！" if drcom_res.status_code == 200 else "登录失败！")
+        result = re.findall(r"\"result\":(\d)", drcom_res.text)[0]
+        if result == "1":
+            print("登录成功！")
+        elif result == "0":
+            print("密码错误！")
 
 
 class DrcomSzuOffice(DrcomSzu):
@@ -199,7 +198,7 @@ def drcom_user_interface():
         elif type == "100":
             break
         else:
-            raise ValueError("Invalid type")
+            print("输入错误！请重新输入！")
         print("----------------------------------------")
         print("回车键继续...")
         input()
@@ -213,8 +212,6 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except ValueError:
-        print("无效的类型！")
     except KeyboardInterrupt:
         print("按下了Ctrl+C!")
     except requests.exceptions.ConnectionError:
