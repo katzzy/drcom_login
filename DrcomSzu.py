@@ -220,6 +220,9 @@ if __name__ == "__main__":
         print("1. 未连接到校园网")
         print("2. 校园网服务器故障")
         print("3. 在宿舍区尝试登录教学区网络")
+    except Exception as e:
+        print("程序出现错误！")
+        print("错误信息：", e)
     finally:
         print("程序已关闭！请按回车键退出...")
         input()
