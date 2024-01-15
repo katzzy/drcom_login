@@ -9,15 +9,13 @@ import requests
 class DrcomSzu(object):
     def __init__(self):
         self.__set_working_directory()
-        self.config = self.__get_config()
-        self.headers = {
+        self._config = self.__get_config()
+        self._headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
                           " AppleWebKit/537.36 (KHTML, like Gecko)"
                           " Chrome/120.0.0.0 Safari/537.36"
         }
         self.__internet_connectivity = False
-        self.check_url = None
-        self.login_url = None
 
     @staticmethod
     def __set_working_directory():
@@ -50,9 +48,9 @@ class DrcomSzu(object):
 
     def get_public_ip(self):
         with requests.Session() as s:
-            r = s.get("https://nstool.netease.com/", headers=self.headers)
+            r = s.get("https://nstool.netease.com/", headers=self._headers)
             src_url = re.findall(r"src='(.*?)'", r.text)[0]
-            r = s.get(src_url, headers=self.headers).text
+            r = s.get(src_url, headers=self._headers).text
             ip = re.findall(r"您的IP地址信息: (.*?) ", r)[0]
             ip_location = re.findall(r"您的IP地址信息: .*? (.*?)<br>", r)[0]
             print("公网IP地址：" + ip)
@@ -60,9 +58,9 @@ class DrcomSzu(object):
 
     def get_dns_address(self):
         with requests.Session() as s:
-            r = s.get("https://nstool.netease.com/", headers=self.headers)
+            r = s.get("https://nstool.netease.com/", headers=self._headers)
             src_url = re.findall(r"src='(.*?)'", r.text)[0]
-            r = s.get(src_url, headers=self.headers).text
+            r = s.get(src_url, headers=self._headers).text
             if "您的DNS设置正确" in r:
                 dns_address = re.findall(
                     r"您的DNS地址信息: (.*?) ", r)[0]
@@ -74,14 +72,14 @@ class DrcomSzu(object):
                 print("DNS设置错误！")
 
     def __check_internet_connection(self):
-        r = requests.get(self.check_url, headers=self.headers).text
+        r = requests.get(self._get_check_url(), headers=self._headers).text
         self.__internet_connectivity = (
             True if re.findall(r"<title>(.*?)</title>", r)[0] == "注销页"
             else False
         )
 
     def get_ip(self):
-        r = requests.get(self.check_url, headers=self.headers).text
+        r = requests.get(self._get_check_url(), headers=self._headers).text
         self.__check_internet_connection()
         if self.__internet_connectivity:
             ip = re.findall(r"v4ip='(.*?)'", r)[0]
@@ -102,7 +100,7 @@ class DrcomSzu(object):
                   time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
             print("尝试登录...",
                   time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
-            self.login_function()
+            self._login_function()
 
     def login_auto(self):
         print("注意:请不要设置过短的间隔时间，至少大于5分钟!!!")
@@ -113,22 +111,28 @@ class DrcomSzu(object):
             self.login()
             time.sleep(60 * int(sleep_time))
 
-    def login_function(self):
+    def _get_check_url(self):
+        raise NotImplementedError
+
+    def _login_function(self):
         raise NotImplementedError
 
 
 class DrcomSzuDormitory(DrcomSzu):
     def __init__(self):
         super().__init__()
-        self.check_url = "http://172.30.255.42"
-        self.login_url = "http://172.30.255.42:801/eportal/portal/login"
+        self.__check_url = "http://172.30.255.42"
+        self.__login_url = "http://172.30.255.42:801/eportal/portal/login"
 
-    def login_function(self):
+    def _get_check_url(self):
+        return self.__check_url
+
+    def _login_function(self):
         payload = {
             "callback": "dr1003",
             "login_method": "1",
-            "user_account": ",0," + self.config["username"],
-            "user_password": self.config["password"],
+            "user_account": ",0," + self._config["username"],
+            "user_password": self._config["password"],
             "wlan_user_ip": self.get_ip(),
             "wlan_user_ipv6": "",
             "wlan_user_mac": "000000000000",
@@ -141,9 +145,9 @@ class DrcomSzuDormitory(DrcomSzu):
             "lang": "en"
         }
         drcom_res = requests.get(
-            self.login_url,
+            self.__login_url,
             params=payload,
-            headers=self.headers
+            headers=self._headers
         )
         result = re.findall(r"\"result\":(\d)", drcom_res.text)[0]
         if result == "1":
@@ -155,19 +159,22 @@ class DrcomSzuDormitory(DrcomSzu):
 class DrcomSzuOffice(DrcomSzu):
     def __init__(self):
         super().__init__()
-        self.check_url = "https://drcom.szu.edu.cn/a70.htm"
-        self.login_url = "https://drcom.szu.edu.cn/a70.htm"
+        self.__check_url = "https://drcom.szu.edu.cn/a70.htm"
+        self.__login_url = "https://drcom.szu.edu.cn/a70.htm"
 
-    def login_function(self):
+    def _get_check_url(self):
+        return self.__check_url
+
+    def _login_function(self):
         drcom_form = {
-            "DDDDD": self.config["username"],
-            "upass": self.config["password"],
+            "DDDDD": self._config["username"],
+            "upass": self._config["password"],
             "0MKKey": "%B5%C7%A1%A1%C2%BC",
         }
         drcom_res = requests.post(
-            self.login_url,
+            self.__login_url,
             data=drcom_form,
-            headers=self.headers
+            headers=self._headers
         )
         print("响应内容:%s" % drcom_res.text)
         print("请求头:%s" % drcom_res.request.headers)
