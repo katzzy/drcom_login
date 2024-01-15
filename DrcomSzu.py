@@ -49,10 +49,29 @@ class DrcomSzu(object):
         print("配置文件更新成功！")
 
     def get_public_ip(self):
-        r = requests.get("https://ip.cn/api/index?ip=&type=0",
-                         headers=self.headers).text
-        print("公网IP地址：" + re.findall(r"\"ip\":\"(.*?)\"", r)[0])
-        print("公网IP地址所在地：" + re.findall(r"\"address\":\"(.*?)\"", r)[0])
+        with requests.Session() as s:
+            r = s.get("https://nstool.netease.com/", headers=self.headers)
+            src_url = re.findall(r"src='(.*?)'", r.text)[0]
+            r = s.get(src_url, headers=self.headers).text
+            ip = re.findall(r"您的IP地址信息: (.*?) ", r)[0]
+            ip_location = re.findall(r"您的IP地址信息: .*? (.*?)<br>", r)[0]
+            print("公网IP地址：" + ip)
+            print("公网IP地址所在地：" + ip_location)
+
+    def get_dns_address(self):
+        with requests.Session() as s:
+            r = s.get("https://nstool.netease.com/", headers=self.headers)
+            src_url = re.findall(r"src='(.*?)'", r.text)[0]
+            r = s.get(src_url, headers=self.headers).text
+            if "您的DNS设置正确" in r:
+                dns_address = re.findall(
+                    r"您的DNS地址信息: (.*?) ", r)[0]
+                dns_address_location = re.findall(
+                    r"您的DNS地址信息: .*? (.*?)<br>", r)[0]
+                print("DNS地址：" + dns_address)
+                print("DNS地址所在地：" + dns_address_location)
+            else:
+                print("DNS设置错误！")
 
     def __check_internet_connection(self):
         r = requests.get(self.check_url, headers=self.headers).text
@@ -177,28 +196,32 @@ def drcom_user_interface():
             "4. 教学区网络(自动续期)\n"
             "5. 查询校内ip(仅宿舍网络)\n"
             "6. 查询公网ip\n"
+            "7. 查询DNS地址\n"
             "100. 退出程序\n"
             "请输入功能编号："
         )
         print("----------------------------------------")
-        if type == "0":
-            DrcomSzu.set_config()
-        elif type == "1":
-            drcom_login(DrcomSzuDormitory(), False)
-        elif type == "2":
-            drcom_login(DrcomSzuOffice(), False)
-        elif type == "3":
-            drcom_login(DrcomSzuDormitory(), True)
-        elif type == "4":
-            drcom_login(DrcomSzuOffice(), True)
-        elif type == "5":
-            DrcomSzuDormitory().get_ip()
-        elif type == "6":
-            DrcomSzu().get_public_ip()
-        elif type == "100":
-            break
-        else:
-            print("输入错误！请重新输入！")
+        match type:
+            case "0":
+                DrcomSzu.set_config()
+            case "1":
+                drcom_login(DrcomSzuDormitory(), False)
+            case "2":
+                drcom_login(DrcomSzuOffice(), False)
+            case "3":
+                drcom_login(DrcomSzuDormitory(), True)
+            case "4":
+                drcom_login(DrcomSzuOffice(), True)
+            case "5":
+                DrcomSzuDormitory().get_ip()
+            case "6":
+                DrcomSzu().get_public_ip()
+            case "7":
+                DrcomSzu().get_dns_address()
+            case "100":
+                break
+            case _:
+                print("输入错误！请重新输入！")
         print("----------------------------------------")
         print("回车键继续...")
         input()
