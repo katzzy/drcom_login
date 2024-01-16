@@ -235,7 +235,12 @@ def drcom_user_interface():
         print("----------------------------------------")
         print("回车键继续...")
         input()
-        os.system("cls")
+        if os.name == "nt":
+            os.system("cls")
+        elif os.name == "posix":
+            os.system("clear")
+        else:
+            print("未知系统！无法清屏！")
 
 
 def main():
