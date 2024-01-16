@@ -12,16 +12,16 @@ class DrcomSzu(object):
         self._config = self.__get_config()
         self._headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-                          " AppleWebKit/537.36 (KHTML, like Gecko)"
-                          " Chrome/120.0.0.0 Safari/537.36"
+            " AppleWebKit/537.36 (KHTML, like Gecko)"
+            " Chrome/120.0.0.0 Safari/537.36"
         }
         self.__internet_connectivity = False
 
     @staticmethod
     def __set_working_directory():
         current_path = os.path.abspath(
-            os.path.dirname(
-                os.path.realpath(sys.argv[0])))
+            os.path.dirname(os.path.realpath(sys.argv[0]))
+        )
         current_path = current_path.replace("\\", "/")
         # print("当前工作目录：" + current_path)
         os.chdir(current_path)
@@ -62,10 +62,10 @@ class DrcomSzu(object):
             src_url = re.findall(r"src='(.*?)'", r.text)[0]
             r = s.get(src_url, headers=self._headers).text
             if "您的DNS设置正确" in r:
-                dns_address = re.findall(
-                    r"您的DNS地址信息: (.*?) ", r)[0]
+                dns_address = re.findall(r"您的DNS地址信息: (.*?) ", r)[0]
                 dns_address_location = re.findall(
-                    r"您的DNS地址信息: .*? (.*?)<br>", r)[0]
+                    r"您的DNS地址信息: .*? (.*?)<br>", r
+                )[0]
                 print("DNS地址：" + dns_address)
                 print("DNS地址所在地：" + dns_address_location)
             else:
@@ -74,7 +74,8 @@ class DrcomSzu(object):
     def __check_internet_connection(self):
         r = requests.get(self._get_check_url(), headers=self._headers).text
         self.__internet_connectivity = (
-            True if re.findall(r"<title>(.*?)</title>", r)[0] == "注销页"
+            True
+            if re.findall(r"<title>(.*?)</title>", r)[0] == "注销页"
             else False
         )
 
@@ -93,13 +94,16 @@ class DrcomSzu(object):
     def login(self):
         self.__check_internet_connection()
         if self.__internet_connectivity:
-            print("网络已连接！",
-                  time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+            print(
+                "网络已连接！", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            )
         else:
-            print("网络未连接！",
-                  time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
-            print("尝试登录...",
-                  time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+            print(
+                "网络未连接！", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            )
+            print(
+                "尝试登录...", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            )
             self._login_function()
 
     def login_auto(self):
@@ -142,12 +146,10 @@ class DrcomSzuDormitory(DrcomSzu):
             "terminal_type": "1",
             "lang": "en",
             "v": "3246",
-            "lang": "en"
+            "lang": "en",
         }
         drcom_res = requests.get(
-            self.__login_url,
-            params=payload,
-            headers=self._headers
+            self.__login_url, params=payload, headers=self._headers
         )
         result = re.findall(r"\"result\":(\d)", drcom_res.text)[0]
         if result == "1":
@@ -172,9 +174,7 @@ class DrcomSzuOffice(DrcomSzu):
             "0MKKey": "%B5%C7%A1%A1%C2%BC",
         }
         drcom_res = requests.post(
-            self.__login_url,
-            data=drcom_form,
-            headers=self._headers
+            self.__login_url, data=drcom_form, headers=self._headers
         )
         print("响应内容:%s" % drcom_res.text)
         print("请求头:%s" % drcom_res.request.headers)
