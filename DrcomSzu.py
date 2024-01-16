@@ -76,6 +76,7 @@ class DrcomSzu(object):
         self.__internet_connectivity = (
             True
             if re.findall(r"<title>(.*?)</title>", r)[0] == "注销页"
+            or re.findall(r"<title>(.*?)</title>", r)[0] == "Drcom PC注销页"
             else False
         )
 
@@ -155,13 +156,13 @@ class DrcomSzuDormitory(DrcomSzu):
         if result == "1":
             print("登录成功！")
         elif result == "0":
-            print("密码错误！")
+            print("登录失败！")
 
 
 class DrcomSzuOffice(DrcomSzu):
     def __init__(self):
         super().__init__()
-        self.__check_url = "https://drcom.szu.edu.cn/a70.htm"
+        self.__check_url = "https://drcom.szu.edu.cn/"
         self.__login_url = "https://drcom.szu.edu.cn/a70.htm"
 
     def _get_check_url(self):
@@ -176,9 +177,11 @@ class DrcomSzuOffice(DrcomSzu):
         drcom_res = requests.post(
             self.__login_url, data=drcom_form, headers=self._headers
         )
-        print("响应内容:%s" % drcom_res.text)
-        print("请求头:%s" % drcom_res.request.headers)
-        print("登录成功！" if drcom_res.status_code == 200 else "登录失败！")
+        title = re.findall(r"<title>(.*?)</title>", drcom_res.text)[0]
+        if title == "Drcom PC登陆成功页":
+            print("登录成功！")
+        else:
+            print("登录失败！")
 
 
 def drcom_login(drcom_szu, auto_login=False):
