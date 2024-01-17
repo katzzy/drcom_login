@@ -74,9 +74,9 @@ class DrcomSzu(object):
 
     def __check_internet_connection(self):
         if os.name == "nt":
-            exit_code = os.system("ping 183.2.172.42 -w 1000 -n 1 > nul")
+            exit_code = os.system("ping www.baidu.com -w 1000 -n 1 > nul")
         elif os.name == "posix":
-            exit_code = os.system("ping 183.2.172.42 -W 1 -c 1 > /dev/null")
+            exit_code = os.system("ping www.baidu.com -W 1 -c 1 > /dev/null")
         else:
             print("未知系统！请自行修改代码后运行！")
             exit(1)
